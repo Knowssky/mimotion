@@ -18,19 +18,22 @@ import util.push_util as push_util
 # 获取默认值转int
 def get_int_value_default(_config: dict, _key, default):
     _config.setdefault(_key, default)
-    return int(_config.get(_key))
+    try:
+        return int(_config.get(_key))
+    except (ValueError, TypeError):
+        print(f"配置项{_key}不是有效整数，使用默认值{default}")
+        return default
 
 
-# 获取当前时间对应的最大和最小步数
-def get_min_max_by_time(hour=None, minute=None):
-    if hour is None:
-        hour = time_bj.hour
-    if minute is None:
-        minute = time_bj.minute
-    time_rate = min((hour * 60 + minute) / (22 * 60), 1)
+# 移除时间打折逻辑，直接返回配置的最小/最大步数
+def get_min_max_by_time():
     min_step = get_int_value_default(config, 'MIN_STEP', 18000)
     max_step = get_int_value_default(config, 'MAX_STEP', 25000)
-    return int(time_rate * min_step), int(time_rate * max_step)
+    # 确保最小值小于最大值，避免随机数生成异常
+    if min_step >= max_step:
+        print(f"警告：MIN_STEP({min_step}) 大于等于 MAX_STEP({max_step})，已自动调整为 MIN_STEP={max_step - 1000}, MAX_STEP={max_step}")
+        min_step = max_step - 1000
+    return min_step, max_step
 
 
 # 虚拟ip地址
